@@ -1,0 +1,23 @@
+{
+    "fecha": "07/06/2026 22:50:47",
+    "historial": [
+        {
+            "ronda": 1,
+            "jugador": "Piedra",
+            "cpu": "Papel",
+            "ganador": "CPU"
+        },
+        {
+            "ronda": 2,
+            "jugador": "Piedra",
+            "cpu": "Papel",
+            "ganador": "CPU"
+        },
+        {
+            "ronda": 3,
+            "jugador": "Papel",
+            "cpu": "Papel",
+            "ganador": "Empate"
+        }
+    ]
+}
