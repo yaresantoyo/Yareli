@@ -1,1 +1,154 @@
+import random
+import json
+from datetime import datetime
 
+
+# ==========================
+# CLASE JUGADOR
+# ==========================
+class Jugador:
+    def __init__(self, nombre: str):
+        self.__nombre = nombre
+        self.__victorias = 0
+
+    def get_nombre(self) -> str:
+        return self.__nombre
+
+    def get_victorias(self) -> int:
+        return self.__victorias
+
+    def sumar_victoria(self) -> None:
+        self.__victorias += 1
+
+    # Método polimórfico
+    def elegir_opcion(self) -> str:
+        while True:
+            try:
+                opcion = input("\nElige Piedra, Papel o Tijera: ").capitalize()
+
+                if opcion not in ["Piedra", "Papel", "Tijera"]:
+                    raise ValueError
+
+                return opcion
+
+            except ValueError:
+                print("❌ Opción inválida. Intenta de nuevo.")
+
+
+# ==========================
+# HERENCIA
+# ==========================
+class JugadorCPU(Jugador):
+    def __init__(self, nombre: str = "CPU"):
+        super().__init__(nombre)
+
+    # Polimorfismo
+    def elegir_opcion(self) -> str:
+        return random.choice(["Piedra", "Papel", "Tijera"])
+
+
+# ==========================
+# CLASE PARTIDA
+# ==========================
+class Partida:
+    def __init__(self, jugador: Jugador, cpu: JugadorCPU):
+        self.jugador = jugador
+        self.cpu = cpu
+        self.historial = []
+
+    def determinar_ganador(self, opcion_jugador: str, opcion_cpu: str) -> str:
+
+        if opcion_jugador == opcion_cpu:
+            return "Empate"
+
+        if (
+            (opcion_jugador == "Piedra" and opcion_cpu == "Tijera")
+            or (opcion_jugador == "Papel" and opcion_cpu == "Piedra")
+            or (opcion_jugador == "Tijera" and opcion_cpu == "Papel")
+        ):
+            self.jugador.sumar_victoria()
+            return self.jugador.get_nombre()
+
+        self.cpu.sumar_victoria()
+        return self.cpu.get_nombre()
+
+    def jugar_torneo(self, rondas: int) -> None:
+
+        for ronda in range(1, rondas + 1):
+
+            print(f"\n========== RONDA {ronda} ==========")
+
+            opcion_jugador = self.jugador.elegir_opcion()
+            opcion_cpu = self.cpu.elegir_opcion()
+
+            ganador = self.determinar_ganador(opcion_jugador, opcion_cpu)
+
+            print(f"{self.jugador.get_nombre()}: {opcion_jugador}")
+            print(f"CPU: {opcion_cpu}")
+            print(f"Resultado: {ganador}")
+
+            self.historial.append({
+                "ronda": ronda,
+                "jugador": opcion_jugador,
+                "cpu": opcion_cpu,
+                "ganador": ganador,
+            })
+
+        self.guardar_historial()
+        self.mostrar_estadisticas()
+
+    def guardar_historial(self) -> None:
+
+        datos = {
+            "fecha": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "historial": self.historial,
+        }
+
+        try:
+            with open("historial.json", "w", encoding="utf-8") as archivo:
+                json.dump(datos, archivo, indent=4, ensure_ascii=False)
+
+            print("\n💾 Historial guardado en historial.json")
+
+        except Exception as e:
+            print("Error al guardar archivo:", e)
+
+    def mostrar_estadisticas(self) -> None:
+
+        print("\n========== ESTADÍSTICAS ==========")
+
+        victorias_jugador = self.jugador.get_victorias()
+        victorias_cpu = self.cpu.get_victorias()
+
+        empates = sum(1 for ronda in self.historial if ronda["ganador"] == "Empate")
+
+        print(f"Victorias jugador: {victorias_jugador}")
+        print(f"Victorias CPU: {victorias_cpu}")
+        print(f"Empates: {empates}")
+
+        if victorias_jugador > victorias_cpu:
+            print(f"\n🏆 Campeón: {self.jugador.get_nombre()}")
+
+        elif victorias_cpu > victorias_jugador:
+            print(f"\n🏆 Campeón: {self.cpu.get_nombre()}")
+
+        else:
+            print("\n🤝 El torneo terminó empatado")
+
+
+if __name__ == "__main__":
+    nombre = input("Ingrese su nombre: ").strip() or "Jugador"
+    jugador = Jugador(nombre)
+    cpu = JugadorCPU()
+
+    while True:
+        try:
+            rondas = int(input("¿Cuántas rondas quieres jugar?: "))
+            if rondas <= 0:
+                raise ValueError
+            break
+        except ValueError:
+            print("Introduce un número entero positivo.")
+
+    partida = Partida(jugador, cpu)
+    partida.jugar_torneo(rondas)
